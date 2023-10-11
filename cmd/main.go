@@ -8,12 +8,18 @@ import (
 	"os"
 	"os/signal"
 	"time"
+
+	"github.com/gorilla/mux"
 )
 
 func main() {
+	router := mux.NewRouter()
+	router.HandleFunc("/", api.Root).Methods("GET")
+	router.HandleFunc("/hello", api.Hello).Methods("GET")
+
 	server := &http.Server{
 		Addr:    ":8080",
-		Handler: http.HandlerFunc(api.Serve),
+		Handler: router,
 	}
 
 	done := make(chan bool)

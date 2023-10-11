@@ -2,6 +2,11 @@ package api
 
 import "net/http"
 
-func Serve(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusNotFound)
+func Root(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusFound)
+}
+
+func Hello(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("hello world!"))
 }
