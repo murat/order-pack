@@ -1,0 +1,88 @@
+kind: pipeline
+type: docker
+name: lint
+steps:
+  - name: lint
+    image: golang
+    volumes:
+      - name: deps
+        path: /go
+    commands:
+      - go mod download
+      - go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.45.2
+      - make lint
+
+---
+kind: pipeline
+type: docker
+name: test
+steps:
+  - name: test
+    image: golang
+    volumes:
+      - name: deps
+        path: /go
+    commands:
+      - go test
+
+---
+kind: pipeline
+type: docker
+name: build
+depends_on:
+  - lint
+  - test
+trigger:
+  event:
+    exclude:
+      - custom
+steps:
+  - name: build
+    image: golang
+    volumes:
+      - name: deps
+        path: /go
+    commands:
+      - go build
+
+---
+kind: pipeline
+type: docker
+name: deploy
+depends_on:
+  - lint
+  - test
+  - build
+trigger:
+  branch:
+    - staging
+  event:
+    - push
+steps:
+  - name: deploy
+    image: alpine
+    commands:
+      - sleep $(( ( RANDOM % 30 )  + 1 ))
+
+---
+kind: pipeline
+type: docker
+name: coverage
+depends_on:
+  - lint
+  - test
+trigger:
+  event:
+    - custom
+steps:
+  - name: coverage
+    image: golang
+    volumes:
+      - name: deps
+        path: /go
+    commands:
+      - go test ./... -coverprofile=coverage.out && go tool cover -html=coverage.out -o coverage.html
+
+volumes:
+  - name: deps
+    temp: {}
