@@ -8,19 +8,19 @@ import (
 	"gorm.io/gorm"
 )
 
-type Conn struct {
-	DB *gorm.DB
+type Database struct {
+	Conn *gorm.DB
 }
 
-func New(dbName string) (*Conn, error) {
+func New(dbName string) (*Database, error) {
 	if dbName == "" {
 		return nil, errors.New("dbName is not provided")
 	}
 
-	db, err := gorm.Open(sqlite.Open(dbName+".db"), &gorm.Config{})
+	db, err := gorm.Open(sqlite.Open(dbName), &gorm.Config{})
 	if err != nil {
 		return nil, fmt.Errorf("could not open database, %w", err)
 	}
 
-	return &Conn{DB: db}, nil
+	return &Database{Conn: db}, nil
 }

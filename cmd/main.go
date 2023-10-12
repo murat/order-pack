@@ -4,22 +4,39 @@ import (
 	"context"
 	"log"
 	"net/http"
-	"order-pack/internal/api"
 	"os"
 	"os/signal"
 	"time"
 
+	"order-pack/internal/api"
+	"order-pack/internal/database"
+	"order-pack/internal/pack"
+
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
 
 func main() {
-	router := mux.NewRouter()
-	router.HandleFunc("/", api.Root).Methods("GET")
-	router.HandleFunc("/hello", api.Hello).Methods("GET")
+	db, err := database.New("test.db")
+	if err != nil {
+		log.Fatalf("could not open database, %v", err)
+	}
+
+	if err := db.Conn.AutoMigrate(&pack.Pack{}); err != nil {
+		log.Fatalf("could not migrate database, %v", err)
+	}
+
+	packSvc := pack.NewService(db)
+	apiSrv := api.NewApi(packSvc)
+
+	r := mux.NewRouter()
+	r.HandleFunc("/", apiSrv.RootHandler).Methods(http.MethodGet)
+	r.HandleFunc("/hello", apiSrv.HelloHandler).Methods(http.MethodGet)
+	r.HandleFunc("/packs", apiSrv.GetPackagesHandler).Methods(http.MethodGet)
 
 	server := &http.Server{
 		Addr:    ":8080",
-		Handler: router,
+		Handler: handlers.LoggingHandler(os.Stdout, r),
 	}
 
 	done := make(chan bool)
@@ -42,8 +59,7 @@ func main() {
 	}()
 
 	log.Println("[info] Server is ready. Listening on :8080")
-	err := server.ListenAndServe()
-	if err != nil && err != http.ErrServerClosed {
+	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		log.Fatalf("[error] could not start server, %v", err)
 	}
 
