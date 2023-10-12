@@ -10,33 +10,35 @@ import (
 
 	"order-pack/internal/api"
 	"order-pack/internal/database"
-	"order-pack/internal/pack"
+	"order-pack/internal/product"
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
 
 func main() {
-	db, err := database.New("test.db")
+	db, err := database.New("./test.db")
 	if err != nil {
 		log.Fatalf("could not open database, %v", err)
 	}
 
-	if err := db.Conn.AutoMigrate(&pack.Pack{}); err != nil {
+	if err := db.AutoMigrate(&product.Product{}); err != nil {
 		log.Fatalf("could not migrate database, %v", err)
 	}
 
-	packSvc := pack.NewService(db)
-	apiSrv := api.NewApi(packSvc)
+	productSvc := product.NewService(db)
+	apiSrv := api.NewApi(productSvc)
 
-	r := mux.NewRouter()
+	r := mux.NewRouter().StrictSlash(true)
 	r.HandleFunc("/", apiSrv.RootHandler).Methods(http.MethodGet)
 	r.HandleFunc("/hello", apiSrv.HelloHandler).Methods(http.MethodGet)
-	r.HandleFunc("/packs", apiSrv.GetPackagesHandler).Methods(http.MethodGet)
+	r.HandleFunc("/products", apiSrv.GetProductsHandler).Methods(http.MethodGet)
+	r.HandleFunc("/products", apiSrv.CreateProductHandler).Methods(http.MethodPost)
+	r.HandleFunc("/products/{id:[0-9]+}", apiSrv.GetProductHandler).Methods(http.MethodGet)
 
 	server := &http.Server{
 		Addr:    ":8080",
-		Handler: handlers.LoggingHandler(os.Stdout, r),
+		Handler: handlers.LoggingHandler(os.Stdout, api.ContentTypeMiddleware(r)),
 	}
 
 	done := make(chan bool)
