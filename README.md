@@ -19,22 +19,22 @@ order-pack developed by using only standard library.
 ### Locally
 
 ```shell
-git clone git@github.com:murat/order-product.git && cd order-product
+git clone git@github.com:murat/order-pack.git && cd order-pack
 
-go build -o ./bin/order-product ./cmd/main.go # or make build
+go build -o ./bin/order-pack ./cmd/main.go # or make build
 
 go run .
 # or
-./bin/order-product
+./bin/order-pack
 ```
 
 ### Docker
 
 ```shell
-git clone git@github.com:murat/order-product.git && cd order-product
+git clone git@github.com:murat/order-pack.git && cd order-pack
 
-docker build . -t order-product
-docker run -p 8080:8080 order-product
+docker build . -t order-pack
+docker run -p 8080:8080 order-pack
 ```
 
 order-pack is going to start a http server that listens **8080** port.
