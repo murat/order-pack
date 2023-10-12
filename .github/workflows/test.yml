@@ -21,7 +21,7 @@ jobs:
         with:
           go-version: ${{ matrix.go }}
       - name: Build
-        run: go build -o ./bin .
+        run: go build -o ./bin/order-pack cmd/main.go
       - name: Test
         run: go test ./...
       - name: Coverage
