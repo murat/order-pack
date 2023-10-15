@@ -10,6 +10,7 @@ import (
 
 	"order-pack/internal/api"
 	"order-pack/internal/database"
+	"order-pack/internal/order"
 	"order-pack/internal/product"
 
 	"github.com/gorilla/handlers"
@@ -27,11 +28,13 @@ func main() {
 	}
 
 	productSvc := product.NewService(db)
-	apiSrv := api.NewApi(productSvc)
+	orderSvc := order.NewService(db)
+	apiSrv := api.NewApi(productSvc, orderSvc)
 
 	r := mux.NewRouter().StrictSlash(true)
 	r.HandleFunc("/", apiSrv.RootHandler).Methods(http.MethodGet)
 	r.HandleFunc("/hello", apiSrv.HelloHandler).Methods(http.MethodGet)
+	r.HandleFunc("/orders", apiSrv.CreateOrderHandler).Methods(http.MethodPost)
 	r.HandleFunc("/products", apiSrv.GetProductsHandler).Methods(http.MethodGet)
 	r.HandleFunc("/products", apiSrv.CreateProductHandler).Methods(http.MethodPost)
 	r.HandleFunc("/products/{id:[0-9]+}", apiSrv.GetProductHandler).Methods(http.MethodGet)

@@ -12,7 +12,7 @@ type Product struct {
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 	Name        string `json:"name"`
-	PackageSize int64  `json:"size"`
+	PackageSize int    `json:"package_size"`
 }
 
 type Service struct {
@@ -26,6 +26,15 @@ func NewService(db *gorm.DB) *Service {
 func (s *Service) Get() ([]Product, error) {
 	var products []Product
 	if err := s.db.Find(&products).Error; err != nil {
+		return nil, fmt.Errorf("could not fetch products, %w", err)
+	}
+
+	return products, nil
+}
+
+func (s *Service) GetSortedBy(sort string) ([]Product, error) {
+	var products []Product
+	if err := s.db.Order(sort).Find(&products).Error; err != nil {
 		return nil, fmt.Errorf("could not fetch products, %w", err)
 	}
 

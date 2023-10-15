@@ -1,6 +1,7 @@
 package api
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -8,19 +9,23 @@ import (
 	"strconv"
 	"strings"
 
+	"order-pack/internal/order"
 	"order-pack/internal/product"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
 	"gorm.io/gorm"
 )
 
 type Api struct {
 	ProductSvc *product.Service
+	OrderSvc   *order.Service
 }
 
-func NewApi(productSvc *product.Service) *Api {
+func NewApi(productSvc *product.Service, orderSvc *order.Service) *Api {
 	return &Api{
 		ProductSvc: productSvc,
+		OrderSvc:   orderSvc,
 	}
 }
 
@@ -48,7 +53,7 @@ func (h *Api) CreateProductHandler(w http.ResponseWriter, r *http.Request) {
 
 	p := product.Product{
 		Name:        r.PostFormValue("name"),
-		PackageSize: size,
+		PackageSize: int(size),
 	}
 	if err := h.ProductSvc.Create(&p); err != nil {
 		log.Printf("could not create product, %v", err)
@@ -89,6 +94,35 @@ func (h *Api) GetProductsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	_, _ = w.Write(NewSuccessResponse(products))
+}
+
+type CreateOrderRequest struct {
+	ItemCount int `json:"item_count" validate:"required"`
+}
+
+func (h *Api) CreateOrderHandler(w http.ResponseWriter, r *http.Request) {
+	var req CreateOrderRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		w.WriteHeader(http.StatusUnprocessableEntity)
+		_, _ = w.Write(NewErrorResponse(err.Error()))
+		return
+	}
+
+	if err := validator.New(validator.WithRequiredStructEnabled()).Struct(req); err != nil {
+		w.WriteHeader(http.StatusUnprocessableEntity)
+		_, _ = w.Write(NewErrorResponse(err.Error()))
+		return
+	}
+
+	products, err := h.ProductSvc.GetSortedBy("package_size DESC")
+	if err != nil {
+		log.Printf("could not fetch product, %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		_, _ = w.Write(NewErrorResponse(err.Error()))
+		return
+	}
+
+	_, _ = w.Write(NewSuccessResponse(order.FulfillOrder(&order.Order{ItemCount: req.ItemCount}, products)))
 }
 
 func getParam(r *http.Request, param string) (string, error) {
