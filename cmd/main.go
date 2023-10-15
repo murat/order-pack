@@ -29,7 +29,7 @@ func main() {
 
 	productSvc := product.NewService(db)
 	orderSvc := order.NewService(db)
-	apiSrv := api.NewApi(productSvc, orderSvc)
+	apiSrv := api.New(productSvc, orderSvc)
 
 	r := mux.NewRouter().StrictSlash(true)
 	r.HandleFunc("/", apiSrv.RootHandler).Methods(http.MethodGet)

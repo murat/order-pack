@@ -58,12 +58,12 @@ func (s *Service) Create(p *Product) error {
 	return nil
 }
 
-func (s *Service) Update(p *Product) error {
+func (s *Service) Update(_ *Product) error {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (s *Service) Delete(p *Product) error {
+func (s *Service) Delete(_ *Product) error {
 	//TODO implement me
 	panic("implement me")
 }

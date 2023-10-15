@@ -17,28 +17,28 @@ import (
 	"gorm.io/gorm"
 )
 
-type Api struct {
+type API struct {
 	ProductSvc *product.Service
 	OrderSvc   *order.Service
 }
 
-func NewApi(productSvc *product.Service, orderSvc *order.Service) *Api {
-	return &Api{
+func New(productSvc *product.Service, orderSvc *order.Service) *API {
+	return &API{
 		ProductSvc: productSvc,
 		OrderSvc:   orderSvc,
 	}
 }
 
-func (h *Api) RootHandler(w http.ResponseWriter, r *http.Request) {
+func (h *API) RootHandler(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(http.StatusFound)
 }
 
-func (h *Api) HelloHandler(w http.ResponseWriter, r *http.Request) {
+func (h *API) HelloHandler(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write(NewSuccessResponse("hello world!"))
 }
 
-func (h *Api) CreateProductHandler(w http.ResponseWriter, r *http.Request) {
+func (h *API) CreateProductHandler(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseForm(); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -65,7 +65,7 @@ func (h *Api) CreateProductHandler(w http.ResponseWriter, r *http.Request) {
 	_, _ = w.Write(NewSuccessResponse(p))
 }
 
-func (h *Api) GetProductHandler(w http.ResponseWriter, r *http.Request) {
+func (h *API) GetProductHandler(w http.ResponseWriter, r *http.Request) {
 	// ignored error due to route constraints
 	val, _ := getParam(r, "id")
 	id, _ := strconv.ParseUint(val, 10, 64)
@@ -84,7 +84,7 @@ func (h *Api) GetProductHandler(w http.ResponseWriter, r *http.Request) {
 	_, _ = w.Write(NewSuccessResponse(p))
 }
 
-func (h *Api) GetProductsHandler(w http.ResponseWriter, r *http.Request) {
+func (h *API) GetProductsHandler(w http.ResponseWriter, _ *http.Request) {
 	products, err := h.ProductSvc.Get()
 	if err != nil {
 		log.Printf("could not fetch products, %v", err)
@@ -100,7 +100,7 @@ type CreateOrderRequest struct {
 	ItemCount int `json:"item_count" validate:"required"`
 }
 
-func (h *Api) CreateOrderHandler(w http.ResponseWriter, r *http.Request) {
+func (h *API) CreateOrderHandler(w http.ResponseWriter, r *http.Request) {
 	var req CreateOrderRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		w.WriteHeader(http.StatusUnprocessableEntity)
